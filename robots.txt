@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ideariovisual.com/sitemap.xml

@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; connect-src 'none'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Test de afinidad 29N · Ideario</title>
+<meta name="description" content="Responde a 17 o 56 afirmaciones y compara tus respuestas con las posturas de 14 partidos, sacadas de sus programas y de sus votaciones en el Congreso, con la cita y la página de cada una. No se guarda nada.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:,">
+<style>
+@font-face { font-family: "Schibsted Grotesk"; src: url("fuentes/SchibstedGrotesk-wght.woff") format("woff"); font-weight: 400 900; font-display: swap; }
+@font-face { font-family: "Newsreader"; src: url("fuentes/Newsreader-opsz-wght.woff") format("woff"); font-weight: 200 800; font-display: swap; }
+
+/* Paleta del canal (design/tokens/draft.json): marfil y tinta de noche. Sin rojo ni azul: los colores son de los partidos. */
+:root {
+  --bg: #FAF2E5; --surface: #F2E8D7; --raised: #FFFBF4; --ink: #040E18; --muted: #5E5D5A; --line: #D9D1C3;
+  --strong-line: #B9B1A3; --on-ink: #FAF2E5; --frame: #FFFFFF; --focus: #040E18;
+  --sans: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --serif: "Newsreader", Georgia, "Times New Roman", serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #040E18; --surface: #0D1925; --raised: #12202E; --ink: #FAF2E5; --muted: #A3A19D; --line: #26313C;
+    --strong-line: #3F4A55; --on-ink: #040E18; --frame: #FFFFFF; --focus: #FAF2E5; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 var(--sans); }
+a { color: inherit; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+.wrap { max-width: 720px; margin: 0 auto; padding: max(20px, env(safe-area-inset-top)) 16px max(40px, env(safe-area-inset-bottom)); }
+header.top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
+.brand { font-weight: 700; letter-spacing: .02em; text-decoration: none; }
+.brand span { font-weight: 400; color: var(--muted); }
+.navlink { background: none; border: 0; padding: 4px 0; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font-size: 15px; }
+
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+h1 { font: 600 clamp(30px, 6vw, 44px)/1.1 var(--serif); letter-spacing: -.01em; }
+h2 { font: 600 clamp(22px, 4.4vw, 28px)/1.2 var(--serif); }
+h3 { font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 18px; max-width: 60ch; margin: 16px 0 0; }
+.small { font-size: 14px; color: var(--muted); }
+.stack { display: grid; gap: 14px; }
+section + section { margin-top: 44px; }
+
+/* Inicio */
+.modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 28px; }
+.mode { text-align: left; background: var(--raised); border: 1px solid var(--strong-line); border-radius: 14px; padding: 18px; cursor: pointer; display: grid; gap: 4px; }
+.mode:hover { border-color: var(--ink); }
+.mode b { font-size: 20px; }
+.mode .n { font: 600 15px/1 var(--sans); font-variant-numeric: tabular-nums; color: var(--muted); }
+.where { margin-top: 28px; display: grid; gap: 8px; max-width: 60ch; }
+.where label { font-weight: 600; font-size: 17px; }
+.where select, .rwhere select { font: inherit; color: var(--ink); background: var(--raised); border: 1px solid var(--strong-line); border-radius: 10px; padding: 10px 12px; max-width: 100%; }
+.where p { margin: 0; }
+.facts { list-style: none; padding: 0; margin: 28px 0 0; display: grid; gap: 10px; }
+.facts li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; }
+.facts li::before { content: "—"; color: var(--muted); }
+
+/* Pregunta */
+.progress { display: flex; align-items: center; gap: 12px; font-variant-numeric: tabular-nums; }
+.bar { flex: 1; height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--ink); transition: width .24s cubic-bezier(.22,1,.36,1); }
+.tema { margin-top: 26px; }
+.statement { font: 500 clamp(24px, 5vw, 32px)/1.25 var(--serif); margin: 10px 0 0; min-height: 3.75em; text-wrap: pretty; }
+details.sig { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
+details.sig summary { cursor: pointer; color: var(--muted); font-size: 15px; }
+details.sig p { margin: 10px 0 0; max-width: 62ch; }
+.answers { display: grid; gap: 8px; margin-top: 24px; }
+.ans { display: flex; align-items: center; gap: 12px; text-align: left; padding: 13px 16px; background: var(--raised); border: 1px solid var(--strong-line); border-radius: 12px; cursor: pointer; font-size: 17px; min-height: 52px; }
+.ans:hover { border-color: var(--ink); }
+.ans[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.ans kbd { font: 500 12px/1 var(--sans); border: 1px solid currentColor; border-radius: 4px; padding: 3px 5px; opacity: .55; margin-left: auto; }
+.qfoot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; }
+.imp { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; padding: 6px 0; }
+.imp input { width: 20px; height: 20px; accent-color: var(--ink); margin: 0; }
+.ghost { background: none; border: 1px solid var(--strong-line); border-radius: 10px; padding: 9px 14px; cursor: pointer; }
+.ghost:hover { border-color: var(--ink); }
+.ghost:disabled { opacity: .4; cursor: default; }
+.solid { background: var(--ink); color: var(--on-ink); border: 1px solid var(--ink); border-radius: 10px; padding: 11px 18px; cursor: pointer; font-weight: 600; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; }
+.qall { margin: 18px 0 0; }
+
+/* Repaso: todas las afirmaciones con tu respuesta; las que faltan, marcadas */
+.rp-actions { margin-top: 22px; }
+#rp-list { margin-top: 24px; border-top: 1px solid var(--line); }
+.rv { display: grid; grid-template-columns: 2.2em minmax(0, 1fr); gap: 2px 10px; width: 100%; text-align: left; padding: 12px 0; background: none; border: 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.rv-n { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted); text-align: right; }
+.rv-t { font: 500 17px/1.35 var(--serif); }
+.rv:hover .rv-t { text-decoration: underline; text-underline-offset: 3px; }
+.rv-a { grid-column: 2; font-size: 14px; color: var(--muted); }
+.rv-a .pend { color: var(--ink); font-weight: 600; }
+.rv-a .pend::before { content: "○ "; }
+
+/* Resultados */
+.ranking { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 6px; }
+.party { display: grid; grid-template-columns: 26px 72px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 12px; background: var(--raised); border: 1px solid var(--line); border-radius: 12px; cursor: pointer; text-align: left; width: 100%; }
+.party:hover { border-color: var(--ink); }
+.party .pos { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted); text-align: right; }
+.party .who { display: grid; min-width: 0; }
+.party .name { font-weight: 600; overflow-wrap: anywhere; line-height: 1.25; }
+.party .cov { font-size: 13px; color: var(--muted); }
+.party .meter { height: 6px; background: var(--line); border-radius: 3px; margin-top: 6px; overflow: hidden; }
+.party .meter i { display: block; height: 100%; background: var(--ink); }
+.party .pct { font: 700 22px/1 var(--sans); font-variant-numeric: tabular-nums; min-width: 3.2ch; text-align: right; }
+.frame { width: 72px; height: 44px; border-radius: 10px; background: var(--frame); border: 1px solid var(--line); display: grid; place-items: center; overflow: hidden; }
+.frame img { max-width: 62px; max-height: 32px; object-fit: contain; }
+.frame b { font: 700 9px/1.05 var(--sans); color: #040E18; text-align: center; padding: 2px; overflow-wrap: anywhere; }
+@media (hover: none) { .ans kbd { display: none; } }
+.nodata { margin-top: 14px; padding: 12px 14px; border: 1px dashed var(--strong-line); border-radius: 12px; font-size: 15px; }
+.rwhere { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.party .ballot { font-size: 13px; color: var(--muted); }
+details.others { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 12px; }
+details.others summary { cursor: pointer; font-weight: 600; }
+details.others > p { margin: 10px 0 0; }
+.party.off { background: transparent; border-style: dashed; border-color: var(--strong-line); }
+.party.off .meter i { background: var(--muted); }
+
+/* Compartir: la imagen y el texto se hacen aquí, en el navegador, y solo salen de él si los envías tú. */
+.share { margin-top: 36px; padding: 18px; background: var(--raised); border: 1px solid var(--line); border-radius: 14px; display: grid; gap: 14px; }
+.share > p { margin: 0; max-width: 60ch; }
+.sh-what { display: flex; flex-wrap: wrap; gap: 8px; }
+.sh-what label { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border: 1px solid var(--strong-line); border-radius: 999px; cursor: pointer; font-size: 15px; }
+.sh-what label:has(input:checked) { border-color: var(--ink); font-weight: 600; }
+.sh-what label:has(input:disabled) { opacity: .45; cursor: default; }
+.sh-what input { width: 18px; height: 18px; margin: 0; accent-color: var(--ink); }
+.sh-prev { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 14px; align-items: start; }
+.sh-prev.inv { grid-template-columns: minmax(0, 1fr); }
+.sh-prev img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; }
+.sh-det { min-width: 0; }
+.sh-det summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+.sh-text { margin: 8px 0 0; padding: 10px 12px; background: var(--bg); border-radius: 10px; font-size: 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.sh-btns { gap: 8px; }
+.sh-btns > * { min-height: 44px; padding: 8px 14px; font-size: 15px; }
+a.ghost, a.solid { display: inline-flex; align-items: center; text-decoration: none; }
+@media (max-width: 520px) {
+  .sh-what { display: grid; }
+  .sh-what label { border-radius: 12px; padding: 10px 14px; }
+  .sh-prev { grid-template-columns: minmax(0, 1fr); }
+  .sh-prev img { max-width: 200px; }
+  .sh-btns > * { flex: 1 1 auto; justify-content: center; }
+}
+
+/* Mapa: una fila por partido y otra para ti; cada punto en su propia pista, así nada se cruza (VISUAL_DNA R13). */
+.axis { margin-top: 22px; }
+.dots { display: grid; grid-template-columns: minmax(84px, 128px) minmax(0, 1fr); align-items: center; column-gap: 12px; row-gap: 2px; margin-top: 8px; }
+.dots .ends { grid-column: 2; display: flex; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 600; padding-bottom: 4px; }
+.dots .ends span:last-child { text-align: right; }
+.dl { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; min-height: 30px; min-width: 0; }
+.dl img { height: 20px; width: 28px; object-fit: contain; background: var(--frame); border-radius: 4px; flex: none; }
+.dt { position: relative; height: 30px; margin: 0 8px; }
+.dt::before { content: ""; position: absolute; left: -8px; right: -8px; top: 14px; height: 2px; background: var(--line); }
+.dt::after { content: ""; position: absolute; left: 50%; top: 9px; height: 12px; width: 1px; background: var(--strong-line); }
+.dt i { position: absolute; top: 8px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: var(--ink); z-index: 1; }
+.you .dl { font-weight: 700; }
+.you .dt i { width: 18px; height: 18px; margin-left: -9px; top: 6px; background: var(--bg); border: 4px solid var(--ink); }
+.dots .sep { grid-column: 1 / -1; height: 1px; background: var(--line); margin: 6px 0; }
+
+.compare select { font: inherit; color: var(--ink); background: var(--raised); border: 1px solid var(--strong-line); border-radius: 10px; padding: 10px 12px; max-width: 100%; }
+.topic { margin-top: 26px; }
+.topic h3 { display: flex; justify-content: space-between; gap: 10px; }
+.topic h3 span:last-child { font-variant-numeric: tabular-nums; letter-spacing: 0; text-transform: none; font-size: 14px; }
+.item { padding: 14px 0; border-bottom: 1px solid var(--line); display: grid; gap: 6px; }
+.item .st { font: 500 18px/1.35 var(--serif); }
+.item .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 4px 16px; font-size: 15px; }
+.item .pair div { min-width: 0; }
+.item .lab { color: var(--muted); font-size: 13px; }
+.quote { margin: 4px 0 0; padding-left: 12px; border-left: 2px solid var(--strong-line); font: italic 400 16px/1.45 var(--serif); }
+.quote .orig { display: block; font-size: 14px; color: var(--muted); margin-top: 4px; }
+.src { font-size: 14px; color: var(--muted); }
+.note { font-size: 14px; color: var(--muted); }
+
+/* Cómo funciona */
+.doc p, .doc li { max-width: 64ch; }
+.doc ul, .doc ol { padding-left: 20px; }
+.doc li + li { margin-top: 6px; }
+.formula { font: 500 15px/1.6 ui-monospace, "IBM Plex Mono", Consolas, monospace; background: var(--surface); border-radius: 10px; padding: 12px 14px; overflow-x: auto; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 13px; color: var(--muted); font-weight: 600; }
+footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); display: grid; gap: 6px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./">Ideario <span>· Especial 29N</span></a>
+    <button class="navlink" id="go-como" type="button">Cómo funciona</button>
+  </header>
+
+  <main>
+    <!-- INICIO -->
+    <section id="inicio">
+      <h1>¿Con qué partido coinciden más tus ideas?</h1>
+      <p class="lede">Responde a afirmaciones sobre los temas de estas elecciones y compara tus respuestas con las posturas
+        de los partidos, sacadas de sus programas y de sus votaciones en el Congreso. Cada postura lleva su cita y su
+        página.</p>
+      <div class="where">
+        <label for="circ">¿Dónde votas?</label>
+        <select id="circ"><option value="">Prefiero no decirlo: ver los 14 partidos</option></select>
+        <p class="small" id="circ-on"></p>
+      </div>
+      <div class="modes">
+        <button class="mode" type="button" data-modo="rapido"><span class="n" id="n-rapido"></span><b>Test rápido</b><span class="small">Unos 3 minutos</span></button>
+        <button class="mode" type="button" data-modo="completo"><span class="n" id="n-completo"></span><b>Test completo</b><span class="small">Unos 10 minutos, con todos los temas</span></button>
+      </div>
+      <ul class="facts">
+        <li><span id="f-partidos"></span></li>
+        <li><span>Todo se calcula en tu navegador. No se guarda ni se envía nada: no hay cuentas, ni cookies, ni analítica.</span></li>
+        <li><span>No es una encuesta ni una recomendación de voto: no recoge respuestas, no publica resultados y no pregunta a quién vas a votar. Lee los programas antes de decidir.</span></li>
+        <li><span id="f-corte"></span></li>
+      </ul>
+    </section>
+
+    <!-- PREGUNTA -->
+    <section id="pregunta" hidden aria-live="polite">
+      <div class="progress"><div class="bar"><i id="q-bar"></i></div><span class="small" id="q-count"></span></div>
+      <h3 class="tema" id="q-tema"></h3>
+      <p class="statement" id="q-text"></p>
+      <details class="sig" id="q-sig"><summary>¿Qué significa?</summary><p id="q-sig-text"></p><p class="small" id="q-sig-src"></p></details>
+      <div class="answers" role="group" aria-label="Tu respuesta" id="q-answers"></div>
+      <div class="qfoot">
+        <label class="imp"><input type="checkbox" id="q-imp"> Es importante para mí <span class="small">(cuenta doble)</span></label>
+        <div class="row">
+          <button class="ghost" type="button" id="q-back">Anterior</button>
+          <button class="ghost" type="button" id="q-next">Siguiente</button>
+        </div>
+      </div>
+      <p class="qall"><button class="navlink" type="button" id="q-all">Ver todas tus respuestas</button></p>
+    </section>
+
+    <!-- REPASO -->
+    <section id="repaso" hidden>
+      <h1>Tus respuestas</h1>
+      <p class="lede" id="rp-lede"></p>
+      <div class="row rp-actions">
+        <button class="solid" type="button" id="rp-pend"></button>
+        <button class="ghost" type="button" id="rp-res">Ver resultados</button>
+      </div>
+      <div id="rp-list"></div>
+    </section>
+
+    <!-- RESULTADOS -->
+    <section id="resultados" hidden>
+      <h1>Tus resultados</h1>
+      <p class="lede" id="r-lede"></p>
+      <div class="rwhere"><label class="small" for="r-circ">Votas en</label><select id="r-circ"></select></div>
+      <p class="small" id="r-tie">Los partidos a menos de 2 puntos comparten puesto: la diferencia es demasiado pequeña para separarlos.</p>
+      <ol class="ranking" id="r-ranking"></ol>
+      <div class="nodata" id="r-nodata" hidden></div>
+      <details class="others" id="r-others" hidden>
+        <summary id="r-others-sum"></summary>
+        <p class="small">No estarán en tu papeleta del Congreso. Se muestran por si quieres compararlos.</p>
+        <ol class="ranking" id="r-others-list"></ol>
+      </details>
+
+      <section class="share" aria-labelledby="sh-h">
+        <h2 id="sh-h">Comparte tus resultados</h2>
+        <p>Y anima a tu familia, a tus amigos y a tus conocidos a hacer el test. Puedes enviar tus resultados o solo la invitación.</p>
+        <div class="sh-what" role="radiogroup" aria-label="Qué compartes">
+          <label><input type="radio" name="sh-what" value="res" checked> Con mis resultados</label>
+          <label><input type="radio" name="sh-what" value="inv"> Solo la invitación</label>
+        </div>
+        <div class="sh-prev" id="sh-prev">
+          <img id="sh-img" width="1080" height="1350" alt="" hidden>
+          <details class="sh-det" id="sh-det" open><summary id="sh-sum">Ver el texto</summary><p class="sh-text" id="sh-text"></p></details>
+        </div>
+        <div class="row sh-btns">
+          <button class="solid" type="button" id="sh-native" hidden>Compartir</button>
+          <a class="ghost" id="sh-down" href="#" download="test-29n-ideario.png" hidden>Descargar la imagen</a>
+          <a class="ghost" id="sh-wa" href="#" target="_blank" rel="noopener">WhatsApp</a>
+          <a class="ghost" id="sh-mail" href="#">Correo</a>
+          <button class="ghost" type="button" id="sh-copy">Copiar el texto</button>
+        </div>
+        <p class="small">La imagen y el texto se hacen en tu navegador: solo salen de él si los envías tú. <span id="sh-status" aria-live="polite"></span></p>
+      </section>
+
+      <section>
+        <h2>Dónde quedas en el mapa</h2>
+        <p class="small">Posición en estas afirmaciones, no la ideología general. A la izquierda, más intervención del Estado o
+          posturas más progresistas; a la derecha, más mercado o posturas más conservadoras. Qué lado es cada respuesta
+          lo fija un criterio académico (RILE y CHES), explicado en «Cómo funciona».</p>
+        <div class="axis" id="axis-lr"></div>
+        <div class="axis" id="axis-ter"></div>
+      </section>
+
+      <section class="compare">
+        <h2>Compara tus respuestas</h2>
+        <p class="small">Elige un partido para ver, afirmación por afirmación, su postura, la cita y de dónde sale.</p>
+        <select id="c-party" aria-label="Partido"></select>
+        <div id="c-list"></div>
+      </section>
+
+      <section class="row">
+        <button class="solid" type="button" id="r-full" hidden>Hacer el test completo</button>
+        <button class="ghost" type="button" id="r-review">Revisar o cambiar respuestas</button>
+        <button class="ghost" type="button" id="r-again">Volver a empezar</button>
+      </section>
+    </section>
+
+    <!-- CÓMO FUNCIONA -->
+    <section id="como" class="doc" hidden>
+      <h1>Cómo funciona</h1>
+      <p class="lede">Un test hecho para no inclinar la balanza: reglas escritas antes de leer los programas, cada postura
+        con su cita, y las pruebas que tiene que pasar, publicadas.</p>
+
+      <section class="stack">
+        <h2>Qué partidos</h2>
+        <p>Los que tienen escaño en el Congreso saliente o lo tienen probable según la media de las encuestas publicadas
+          en campaña. SALF entra como excepción declarada: no tiene escaño en el Congreso ni lo da ninguna encuesta, pero
+          sí tiene escaños en el Parlamento Europeo. UPN se presenta con el PP: en Navarra, la candidatura es UPN-PP, y
+          sus posturas son las del PP.</p>
+        <div class="tablewrap"><table id="m-partidos"><thead><tr><th>Partido</th><th>Programa 2026</th><th>Posturas</th></tr></thead><tbody></tbody></table></div>
+      </section>
+
+      <section class="stack">
+        <h2>Tu circunscripción</h2>
+        <p>No todos los partidos se presentan en todas partes. Si eliges dónde votas, el test pone primero los que estarán
+          en tu papeleta del Congreso, con el nombre con el que se presentan allí (UPN-PP en Navarra, PSC-PSOE en
+          Cataluña), y deja los demás aparte. Un partido que va
+          dentro de una coalición (por ejemplo, Podemos dentro de Compromís: Front Valencià) cuenta como presente en tu
+          papeleta, con el nombre de la coalición. La afinidad
+          no cambia: solo cambia qué partidos se muestran primero. Los datos salen de la proclamación oficial de
+          candidaturas, <a id="m-boe" rel="noopener" target="_blank">publicada en el BOE el 3 de noviembre ↗</a>.</p>
+        <div class="tablewrap"><table id="m-circ"><thead><tr><th>Partido</th><th>Dónde se presenta al Congreso</th></tr></thead><tbody></tbody></table></div>
+      </section>
+
+      <section class="stack">
+        <h2>De dónde sale cada postura</h2>
+        <ol>
+          <li>El programa electoral de 2026, con la cita literal y la página.</li>
+          <li>Las propuestas oficiales de campaña, si no hay programa (cuentan la mitad: evidencia limitada).</li>
+          <li>Las votaciones del Congreso entre 2023 y 2026: una votación final, una convalidación o una enmienda a la
+            totalidad cuentan como postura firme (±2); una toma en consideración o una proposición no de ley, como postura
+            en parte (±1). Si menos del 80 % de los diputados de un partido vota igual, no cuenta.</li>
+          <li>Solo para un partido sin programa de 2026 (Junts): su último programa completo, el de las europeas de 2024,
+            donde no hay nada de lo anterior. Cuenta la mitad: evidencia limitada.</li>
+          <li>Si no hay nada: «no se pronuncia». No suma ni resta.</li>
+        </ol>
+        <p>Cada postura se codificó dos veces por separado: la segunda, por un codificador que no vio la primera.
+          Coincidieron exactamente en el 87 % de los casos en los siete primeros programas, en el 86 % en los tres que se
+          publicaron el 16 de noviembre, en el 80 % en el de EH Bildu y en el 89 %, el 88 % y el 92 % en las fuentes de SALF,
+          Podemos y Junts que llegaron el 17, sin ninguna diferencia de signo. Las diferencias se resolvieron con reglas
+          escritas, y un 15 % de las posturas, sorteado, se revisó a mano contra el programa.</p>
+      </section>
+
+      <section class="stack">
+        <h2>Cómo se calcula tu afinidad</h2>
+        <p>Tus respuestas y las posturas de los partidos usan la misma escala, de −2 (muy en desacuerdo) a +2 (muy de
+          acuerdo). Para cada afirmación que respondes y en la que el partido se pronuncia:</p>
+        <div class="formula">acuerdo = 1 − |tu respuesta − su postura| / 4<br>afinidad = (Σ peso × acuerdo + 2 × 0,5) / (Σ peso + 2)</div>
+        <ul>
+          <li>El peso es 2 si marcas la afirmación como importante, y la mitad si la postura tiene evidencia limitada.</li>
+          <li>Los «+ 2» son dos afirmaciones neutras virtuales: así un partido que se pronuncia en pocas afirmaciones no sale
+            el primero por coincidir en esas pocas. Por eso nadie llega al 100 %.</li>
+          <li>Si dos partidos están a menos de 2 puntos, se muestran empatados.</li>
+          <li>Al lado de cada afinidad se ve en cuántas de tus respuestas se pronuncia el partido.</li>
+        </ul>
+      </section>
+
+      <section class="stack">
+        <h2>El mapa izquierda–derecha</h2>
+        <p>Qué respuesta queda a la izquierda en cada afirmación lo fija el índice RILE del Manifesto Project, el método
+          académico de referencia para codificar programas. Lo que el RILE no clasifica (medio ambiente, inmigración,
+          algunos derechos) sigue la dimensión GAL-TAN de la encuesta a expertos de Chapel Hill (CHES 2024). La posición
+          es la media de las posturas, de −1 a +1. En el modelo territorial el eje es otro: «más Estado central ↔ más
+          autogobierno».</p>
+        <p>Contraste: el orden de los partidos en nuestro mapa coincide con el de los expertos de CHES 2024 (correlación
+          de Spearman 0,95). Nuestro centro está más a la izquierda que el suyo, porque el mapa mide estas afirmaciones,
+          no la ideología general.</p>
+      </section>
+
+      <section class="stack">
+        <h2>Las pruebas que pasa</h2>
+        <ul>
+          <li>Respondiendo como un partido, ese partido sale primero.</li>
+          <li>Cada partido está a favor de entre el 52 % y el 64 % de las afirmaciones en las que se pronuncia, y quien
+            responde «muy a favor» a todo no se acerca a ningún partido en especial: el primero le queda a unos 6 puntos
+            de la mitad de la tabla. Para equilibrarlo, siete de las 56 afirmaciones están redactadas en negativo («no
+            debería…»), sin cambiar lo que se pregunta.</li>
+          <li>Con 10.000 usuarios que responden al azar, cubrir más o menos afirmaciones casi no hace ganar más: la
+            correlación es de −0,48, dentro del límite de ±0,5 que nos pusimos. Ganan algo más los partidos que tienen
+            menos partidos a su lado del mapa (Vox, el 14 %; SALF, el 13 %; CC, el 12 %).</li>
+          <li>Límite conocido: Junts no ha publicado programa. Sus posturas salen de las once páginas de propuestas de su
+            web; donde no dicen nada, de sus votaciones en el Congreso, y donde tampoco hay votación, de su programa de
+            las europeas de 2024. Las de su web y su programa europeo cuentan la mitad. El
+            programa de Podemos se enlaza en la copia que publicó Demócrata, porque no hemos encontrado el enlace en su web.
+            En el test rápido pueden salir empatados Frente Amplio y EH Bildu, el PNV y CC, y el BNG y Adelante.</li>
+        </ul>
+      </section>
+
+      <section class="stack">
+        <h2>Correcciones</h2>
+        <p>Si ves una postura mal codificada, dínoslo en los comentarios del vídeo en YouTube o por mensaje a
+          <b>@ideariovisualcanal</b> en Instagram. Cada cambio queda aquí, con fecha, motivo y fuente.</p>
+        <div id="m-corr"></div>
+      </section>
+      <p><button class="ghost" type="button" id="como-back">Volver</button></p>
+    </section>
+  </main>
+
+  <footer>
+    <span>Hecho por <a href="../../">Ideario</a>, canal de divulgación. Sin publicidad y sin relación con ningún partido.</span>
+    <span id="foot-corte"></span>
+    <span>Los logotipos son marcas de sus titulares y se muestran sin alterar, solo para identificar a cada partido. · <a href="../../aviso-legal/#especial">Aviso legal</a> · <a href="../../privacidad/">Privacidad</a></span>
+  </footer>
+</div>
+
+<script src="afinidad.js"></script>
+<script src="datos.js"></script>
+<script src="test.js"></script>
+</body>
+</html>
